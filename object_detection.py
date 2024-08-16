@@ -25,7 +25,7 @@ def accept_box(boxes, box_index, tolerance):
     other_box = boxes[idx]
     if abs(center(other_box, "x") - center(box, "x")) < tolerance and abs(center(other_box, "y") - center(box, "y")) < tolerance:
       return False
-    if box["x"] > 20 * box["y"] or box["x"] > 20 * box["y"]:
+    if box["x"] > 1000or box["y"] > 1000
       return False
  
   return True
