@@ -96,11 +96,12 @@ def save_image_annotated(img_rgb, file_name, output, model_traffic_lights=None):
     label_text = ""
  
     if obj_class == LABEL_PERSON:
-      color = (0, 255, 255)
+      color = (255, 100, 0)
       label_text = "Person " + str(score)
     if obj_class == LABEL_CAR:
-      color = (255, 255, 0)
-      label_text = "Car " + str(score)
+      if score >= 50:
+        color = (255, 255, 0)
+        label_text = "Car " + str(score)
     if obj_class == LABEL_BUS:
       color = (255, 255, 0)
       label_text = "Bus " + str(score)
@@ -108,7 +109,7 @@ def save_image_annotated(img_rgb, file_name, output, model_traffic_lights=None):
       color = (255, 255, 0)
       label_text = "Truck " + str(score)
     if obj_class == LABEL_STOP_SIGN:
-      color = (128, 0, 0)
+      color = (255, 20, 20)
       label_text = "Stop Sign " + str(score)
     if obj_class == LABEL_TRAFFIC_LIGHT:
       color = (255, 255, 255)
