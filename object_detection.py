@@ -18,14 +18,14 @@ LABEL_TRAFFIC_LIGHT = 10
 LABEL_STOP_SIGN = 13
  
 # Accepting boxes function (eliminate double boxes)
-def accept_box(boxes, box_index, tolerance):
+def box_filter(boxes, box_index, tolerance):
   box = boxes[box_index]
  
   for idx in range(box_index):
     other_box = boxes[idx]
     if abs(center(other_box, "x") - center(box, "x")) < tolerance and abs(center(other_box, "y") - center(box, "y")) < tolerance:
       return False
-    if box["x"] > 1000or box["y"] > 1000
+    if box["x"] > 20 * box["y"] or box["x"] > 20 * box["y"]:
       return False
  
   return True
@@ -94,25 +94,34 @@ def save_image_annotated(img_rgb, file_name, output, model_traffic_lights=None):
  
     color = None
     label_text = ""
+    thickness = 0
+    text_color = (255, 255, 255)
  
     if obj_class == LABEL_PERSON:
-      color = (0, 255, 255)
+      color = (255, 0, 0)
       label_text = "Person " + str(score)
+      thickness = 2
     if obj_class == LABEL_CAR:
-      color = (255, 255, 0)
+      color = (154, 255, 0)
       label_text = "Car " + str(score)
+      thickness = 3
     if obj_class == LABEL_BUS:
-      color = (255, 255, 0)
+      color = (154, 255, 0)
       label_text = "Bus " + str(score)
+      thickness = 3
     if obj_class == LABEL_TRUCK:
-      color = (255, 255, 0)
+      color = (154, 255, 0)
       label_text = "Truck " + str(score)
+      thickness = 3
     if obj_class == LABEL_STOP_SIGN:
-      color = (128, 0, 0)
+      color = (200, 0, 0)
       label_text = "Stop Sign " + str(score)
+      thickness = 6
     if obj_class == LABEL_TRAFFIC_LIGHT:
       color = (255, 255, 255)
+      text_color = (255, 255, 255)
       label_text = "Traffic Light " + str(score)
+      thickness = 4
              
       if model_traffic_lights:
        
@@ -129,15 +138,20 @@ def save_image_annotated(img_rgb, file_name, output, model_traffic_lights=None):
         score_light = str(int(np.max(prediction) * 100))
         if label == 0:
           label_text = "Green " + score_light
+          color = (0, 230, 100)
         elif label == 1:
           label_text = "Yellow " + score_light
+          color = (255, 255, 0)
         elif label == 2:
           label_text = "Red " + score_light
+          color = (255, 0, 0)
         else:
           label_text = 'NO-LIGHT'  # This is not a traffic light
+          color = (255, 255, 255)
+          text_color = (0, 0, 0)
  
-    if color and label_text and accept_box(output["boxes"], idx, 10.0) and score > 50:
-      cv2.rectangle(img_rgb, (box["x"], box["y"]), (box["x2"], box["y2"]), color, 2)
+    if color and label_text and label_text != "NO-LIGHT" and box_filter(output["boxes"], idx, 25.0) and box["x"] < 1000 and score > 25:
+      cv2.rectangle(img_rgb, (box["x"], box["y"]), (box["x2"], box["y2"]), color, 3)
       cv2.putText(img_rgb, label_text, (box["x"], box["y"]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
  
   cv2.imwrite(output_file, cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR))
@@ -224,26 +238,34 @@ def perform_object_detection_video(model, video_frame, model_traffic_lights=None
  
     color = None
     label_text = ""
+    thickness = 0
+    text_color = (255, 255, 255)
  
     if obj_class == LABEL_PERSON:
-      color = (0, 255, 255)
+      color = (255, 0, 0)
       label_text = "Person " + str(score)
+      thickness = 2
     if obj_class == LABEL_CAR:
-      color = (255, 255, 0)
+      color = (154, 255, 0)
       label_text = "Car " + str(score)
+      thickness = 3
     if obj_class == LABEL_BUS:
-      color = (255, 255, 0)
+      color = (154, 255, 0)
       label_text = "Bus " + str(score)
+      thickness = 3
     if obj_class == LABEL_TRUCK:
-      color = (255, 255, 0)
+      color = (154, 255, 0)
       label_text = "Truck " + str(score)
+      thickness = 3
     if obj_class == LABEL_STOP_SIGN:
-      color = (128, 0, 0)
+      color = (200, 0, 0)
       label_text = "Stop Sign " + str(score)
+      thickness = 6
     if obj_class == LABEL_TRAFFIC_LIGHT:
       color = (255, 255, 255)
+      text_color = (255, 255, 255)
       label_text = "Traffic Light " + str(score)
-             
+      thickness = 4
       if model_traffic_lights:
        
               # Annotate the image and save it
@@ -257,19 +279,40 @@ def perform_object_detection_video(model, video_frame, model_traffic_lights=None
         score_light = str(int(np.max(prediction) * 100))
         if label == 0:
           label_text = "Green " + score_light
+          color = (0, 230, 100)
         elif label == 1:
           label_text = "Yellow " + score_light
+          color = (255, 255, 0)
         elif label == 2:
           label_text = "Red " + score_light
+          color = (255, 0, 0)
         else:
           label_text = 'NO-LIGHT'  # This is not a traffic light
+          color = (255, 255, 255)
+          text_color = (0, 0, 0)
  
     # Use the score variable to indicate how confident we are it is a traffic light (in % terms)
     # On the actual video frame, we display the confidence that the light is either red, green,
     # yellow, or not a valid traffic light.
-    if color and label_text and accept_box(output["boxes"], idx, 20.0) and score > 20:
-      cv2.rectangle(img_rgb, (box["x"], box["y"]), (box["x2"], box["y2"]), color, 2)
-      cv2.putText(img_rgb, label_text, (box["x"], box["y"]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    if color and label_text and label_text != "NO-LIGHT" and box_filter(output["boxes"], idx, 20.0) and score > 20:
+        # Draw the bounding box
+      box_width = box["x2"] - box["x"]
+      box_height = box["y2"] - box["y"]
+
+      if box_width < 700 and box_height < 700:
+        cv2.rectangle(img_rgb, (box["x"], box["y"]), (box["x2"], box["y2"]), color, thickness)
+
+            # Get the size of the text
+        (text_width, text_height), baseline = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+
+            # Draw the rectangle behind the text
+        cv2.rectangle(img_rgb, (box["x"], box["y"] - text_height - baseline), 
+                          (box["x"] + text_width, box["y"]), color, thickness=-1)
+
+            # Put the label text on the image
+        cv2.putText(img_rgb, label_text, (box["x"], box["y"] - baseline), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2)
+
  
   output_frame = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
   return output_frame
